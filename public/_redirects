@@ -1,0 +1,2 @@
+# Redirect all routes to index.html for SPA (single-page app) support
+/*    /index.html   200
