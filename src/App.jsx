@@ -467,6 +467,14 @@ export default function App() {
               <div className="accounts slide-child" style={{ '--d': 4 }}>
                 {ACCOUNTS.map((account) => (
                   <div className="account" key={account.number}>
+                    <span className="card-chip-pads" aria-hidden="true">
+                      <span className="chip-pad" />
+                      <span className="chip-pad" />
+                      <span className="chip-pad" />
+                      <span className="chip-pad" />
+                      <span className="chip-pad" />
+                      <span className="chip-pad" />
+                    </span>
                     <div>
                       <p className="account-bank">{account.bank}</p>
                       <p className="account-num">{account.number}</p>

@@ -1169,6 +1169,27 @@ a {
   opacity: 0.4;
 }
 
+.card-chip-pads {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  width: 2.25rem;
+  height: 1.75rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  gap: 2px;
+  padding: 2px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.chip-pad {
+  background: var(--gold);
+  border-radius: 2px;
+  opacity: 0.35;
+}
+
 .account:hover {
   border-color: var(--gold);
   box-shadow: 0 4px 20px rgba(139, 109, 74, 0.08);
