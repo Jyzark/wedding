@@ -409,6 +409,30 @@ a {
    SLIDE SYSTEM
    ============================================================ */
 
+/* custom scrollbar */
+.slide::-webkit-scrollbar {
+  width: 4px;
+}
+
+.slide::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.slide::-webkit-scrollbar-thumb {
+  background: rgba(196, 168, 124, 0.25);
+  border-radius: 4px;
+}
+
+.slide::-webkit-scrollbar-thumb:hover {
+  background: rgba(196, 168, 124, 0.4);
+}
+
+/* Firefox */
+.slide {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(196, 168, 124, 0.25) transparent;
+}
+
 .slides-container {
   position: fixed;
   inset: 0;
@@ -426,8 +450,18 @@ a {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  transition: transform var(--slide-duration) var(--ease-out);
+  transition:
+    transform var(--slide-duration) var(--ease-out),
+    opacity 0.6s var(--ease-out);
   will-change: transform;
+}
+
+.slide.is-above {
+  opacity: 0.6;
+}
+
+.slide.is-below {
+  opacity: 0.6;
 }
 
 .slide:not(.is-active) {
@@ -462,50 +496,58 @@ a {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.85rem;
-  padding: 0.75rem 0;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
   transform: translateY(-50%);
 }
 
 .slides-nav::before {
   content: '';
   position: absolute;
-  top: 0.75rem;
-  bottom: 0.75rem;
+  top: 0.5rem;
+  bottom: 0.5rem;
   left: 50%;
   width: 1px;
-  background: rgba(180, 148, 92, 0.2);
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(180, 148, 92, 0.15) 20%,
+    rgba(180, 148, 92, 0.15) 80%,
+    transparent 100%
+  );
   transform: translateX(-50%);
   z-index: -1;
 }
 
 .slides-dot {
   position: relative;
-  width: 0.5rem;
-  height: 0.5rem;
+  width: 0.4rem;
+  height: 0.4rem;
   padding: 0;
-  background: rgba(180, 148, 92, 0.25);
-  border: 1.5px solid rgba(180, 148, 92, 0.4);
+  background: transparent;
+  border: 1px solid rgba(180, 148, 92, 0.35);
   border-radius: 50%;
   cursor: pointer;
   transition:
-    background 0.35s var(--ease-out),
-    transform 0.35s var(--ease-out),
-    border-color 0.35s var(--ease-out),
-    box-shadow 0.35s var(--ease-out);
+    background 0.4s var(--ease-out),
+    transform 0.4s var(--ease-out),
+    border-color 0.4s var(--ease-out),
+    box-shadow 0.4s var(--ease-out);
 }
 
 .slides-dot:hover {
-  background: rgba(180, 148, 92, 0.5);
   border-color: var(--gold);
-  transform: scale(1.35);
+  background: rgba(180, 148, 92, 0.2);
+  transform: scale(1.25);
 }
 
 .slides-dot.is-active {
-  background: var(--accent);
-  border-color: var(--accent);
-  transform: scale(1.6);
-  box-shadow: 0 0 12px rgba(255, 203, 91, 0.4);
+  background: var(--gold);
+  border-color: var(--gold);
+  transform: scale(1.4);
+  box-shadow:
+    0 0 0 3px rgba(255, 203, 91, 0.15),
+    0 0 14px rgba(255, 203, 91, 0.25);
 }
 
 /* ============================================================
