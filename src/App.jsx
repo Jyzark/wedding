@@ -293,6 +293,21 @@ export default function App() {
     <>
       <a className="skip" href="#isi">Lompat ke isi undangan</a>
       <MusicToggle />
+
+      <button
+        className="nav-arrow"
+        onClick={() => goToSlide((activeSlide + 1) % totalSlides)}
+        aria-label={activeSlide === totalSlides - 1 ? 'Kembali ke slide pertama' : 'Slide berikutnya'}
+        type="button"
+      >
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8">
+          {activeSlide === totalSlides - 1 ? (
+            <path d="M18 15l-6-6-6 6" />
+          ) : (
+            <path d="M6 9l6 6 6-6" />
+          )}
+        </svg>
+      </button>
       <Particles />
 
       <div className="wave-left" aria-hidden="true">
