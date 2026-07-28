@@ -1,46 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import Wreath from './Wreath.jsx'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import Particles from './Particles.jsx'
 import './App.css'
 
 const WEDDING_DATE = new Date('2026-10-17T11:00:00+07:00')
 const MAPS_URL = 'https://share.google/N1498OtR3jMvBXDPH'
 
-/* Prewedding photos, sliced from the studio contact sheet. Each file is
-   small enough (17–53 KB) to serve the grid tile and the lightbox from the
-   same source, so there is no separate thumbnail to keep in sync. */
-const GALLERY = [
-  {
-    src: '/gallery/prewedding-1.jpg',
-    alt: 'Azzohabi dan Putri berfoto bersama membawa buket bunga putih',
-  },
-  {
-    src: '/gallery/prewedding-2.jpg',
-    alt: 'Azzohabi menatap Putri sambil tersenyum',
-  },
-  {
-    src: '/gallery/prewedding-3.jpg',
-    alt: 'Azzohabi dan Putri tertawa bersama di belakang rangkaian bunga',
-  },
-  {
-    src: '/gallery/prewedding-4.jpg',
-    alt: 'Azzohabi dan Putri berdiri berdampingan',
-  },
-  {
-    src: '/gallery/prewedding-5.jpg',
-    alt: 'Azzohabi dan Putri bergandengan tangan',
-  },
-  {
-    src: '/gallery/prewedding-6.jpg',
-    alt: 'Azzohabi merangkul bahu Putri',
-  },
-]
-
 const ACCOUNTS = [
   { bank: 'SeaBank', number: '901974084345', holder: 'Putri Ewing Vai' },
   { bank: 'BCA', number: '7651120491', holder: 'Muhammad Azzohabi' },
 ]
-
-/* ---------- helpers ---------- */
 
 function getRemaining(target) {
   const diff = target - Date.now()
@@ -59,9 +27,7 @@ async function copyText(text) {
       await navigator.clipboard.writeText(text)
       return true
     }
-  } catch {
-    /* fall through to the legacy path below */
-  }
+  } catch { /* fall through */ }
   try {
     const field = document.createElement('textarea')
     field.value = text
@@ -78,37 +44,66 @@ async function copyText(text) {
   }
 }
 
-/* Reveals sections as they scroll in. Falls back to showing everything
-   when IntersectionObserver is missing or motion is reduced, so content
-   is never left invisible. */
-function useScrollReveal() {
-  useEffect(() => {
-    const targets = document.querySelectorAll('.reveal')
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+/* ---------- shared decorative components ---------- */
 
-    if (reduced || !('IntersectionObserver' in window)) {
-      targets.forEach((el) => el.classList.add('is-visible'))
-      return
-    }
+function MiniCalendar() {
+  const dates = [12, 13, 14, 15, 16, 17, 18]
+  const labels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible')
-            observer.unobserve(entry.target)
-          }
-        })
-      },
-      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
-    )
-
-    targets.forEach((el) => observer.observe(el))
-    return () => observer.disconnect()
-  }, [])
+  return (
+    <div className="mini-cal" aria-hidden="true">
+      <p className="mini-cal-month">Oktober <span>2026</span></p>
+      <div className="mini-cal-strip">
+        {dates.map((d, i) => (
+          <span key={d} className={`mini-cal-day${d === 17 ? ' is-wedding' : ''}`}>
+            <span className="mini-cal-dow">{labels[i]}</span>
+            <span className="mini-cal-num">
+              {d}
+              {d === 17 && (
+                <svg className="mini-cal-badge" viewBox="0 0 20 18" width="9" height="8">
+                  <path d="M10,17 C2,11 0,7 0,4 C0,1.5 2,0 4,0 C5.5,0 7.5,1 10,3 C12.5,1 14.5,0 16,0 C18,0 20,1.5 20,4 C20,7 18,11 10,17Z"
+                    fill="var(--rose)" opacity="1" />
+                </svg>
+              )}
+            </span>
+          </span>
+        ))}
+      </div>
+    </div>
+  )
 }
 
-/* ---------- pieces ---------- */
+function Ornament({ d = 0 }) {
+  return (
+    <div className="slide-child" style={{ '--d': d }}>
+      <div className="ornament" aria-hidden="true">
+        <span className="ornament-line" />
+        <svg className="ornament-heart" viewBox="0 0 12 11" width="10" height="9">
+          <path d="M6,10 C1.5,6.5 0,4 0,2.5 C0,1 1.2,0 2.5,0 C3.5,0 4.5,0.5 6,2 C7.5,0.5 8.5,0 9.5,0 C10.8,0 12,1 12,2.5 C12,4 10.5,6.5 6,10Z"
+            fill="currentColor" />
+        </svg>
+        <span className="ornament-line" />
+      </div>
+    </div>
+  )
+}
+
+function HeroStar() {
+  return (
+    <span className="hero-star" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <line x1="11" y1="1" x2="11" y2="7" stroke="var(--gold)" strokeWidth="0.6" opacity="0.5" />
+        <line x1="11" y1="15" x2="11" y2="21" stroke="var(--gold)" strokeWidth="0.6" opacity="0.5" />
+        <line x1="1" y1="11" x2="7" y2="11" stroke="var(--gold)" strokeWidth="0.6" opacity="0.5" />
+        <line x1="15" y1="11" x2="21" y2="11" stroke="var(--gold)" strokeWidth="0.6" opacity="0.5" />
+        <circle cx="11" cy="11" r="1.8" fill="var(--gold)" opacity="0.55" />
+        <circle cx="11" cy="11" r="5" stroke="var(--gold)" strokeWidth="0.4" opacity="0.25" />
+      </svg>
+    </span>
+  )
+}
+
+/* ---------- content components ---------- */
 
 function Countdown() {
   const [remaining, setRemaining] = useState(() => getRemaining(WEDDING_DATE))
@@ -121,7 +116,6 @@ function Countdown() {
       if (!next) clearInterval(id)
     }, 1000)
     return () => clearInterval(id)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   if (!remaining) return null
@@ -162,83 +156,13 @@ function CopyButton({ value, label }) {
         if (await copyText(value)) setCopied(true)
       }}
     >
+      <svg className="copy-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <rect x="9" y="9" width="13" height="13" rx="2" />
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+      </svg>
       {copied ? 'Tersalin' : 'Salin'}
       <span className="visually-hidden"> nomor rekening {label}</span>
     </button>
-  )
-}
-
-function Lightbox({ index, onClose, onStep }) {
-  const closeRef = useRef(null)
-  const photo = GALLERY[index]
-
-  useEffect(() => {
-    closeRef.current?.focus()
-
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') onClose()
-      else if (event.key === 'ArrowLeft') onStep(-1)
-      else if (event.key === 'ArrowRight') onStep(1)
-    }
-
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    document.addEventListener('keydown', onKeyDown)
-
-    return () => {
-      document.removeEventListener('keydown', onKeyDown)
-      document.body.style.overflow = previousOverflow
-    }
-  }, [onClose, onStep])
-
-  return (
-    <div
-      className="lightbox"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Galeri foto"
-      onClick={onClose}
-    >
-      <img src={photo.src} alt={photo.alt} onClick={(e) => e.stopPropagation()} />
-
-      <button
-        type="button"
-        ref={closeRef}
-        className="lb-btn lb-close"
-        onClick={onClose}
-        aria-label="Tutup galeri"
-      >
-        &times;
-      </button>
-
-      <button
-        type="button"
-        className="lb-btn lb-prev"
-        onClick={(e) => {
-          e.stopPropagation()
-          onStep(-1)
-        }}
-        aria-label="Foto sebelumnya"
-      >
-        &#8249;
-      </button>
-
-      <button
-        type="button"
-        className="lb-btn lb-next"
-        onClick={(e) => {
-          e.stopPropagation()
-          onStep(1)
-        }}
-        aria-label="Foto berikutnya"
-      >
-        &#8250;
-      </button>
-
-      <p className="lb-count">
-        {index + 1} / {GALLERY.length}
-      </p>
-    </div>
   )
 }
 
@@ -247,35 +171,20 @@ function MusicToggle() {
   const [playing, setPlaying] = useState(false)
 
   useEffect(() => {
-    // Browsers block unprompted audio; reflect whatever actually happened
-    // rather than assuming it started.
-    audioRef.current
-      ?.play()
-      .then(() => setPlaying(true))
-      .catch(() => setPlaying(false))
+    audioRef.current?.play().then(() => setPlaying(true)).catch(() => setPlaying(false))
   }, [])
 
   const toggle = () => {
     const audio = audioRef.current
     if (!audio) return
-    if (playing) {
-      audio.pause()
-      setPlaying(false)
-    } else {
-      audio.play().then(() => setPlaying(true)).catch(() => {})
-    }
+    if (playing) { audio.pause(); setPlaying(false) }
+    else { audio.play().then(() => setPlaying(true)).catch(() => {}) }
   }
 
   return (
     <>
       <audio ref={audioRef} src="/music.mp3" loop preload="none" />
-      <button
-        type="button"
-        className="music"
-        onClick={toggle}
-        aria-pressed={playing}
-        aria-label={playing ? 'Hentikan musik' : 'Putar musik'}
-      >
+      <button type="button" className="music" onClick={toggle} aria-pressed={playing} aria-label={playing ? 'Hentikan musik' : 'Putar musik'}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
           {playing ? (
             <>
@@ -291,240 +200,300 @@ function MusicToggle() {
   )
 }
 
-/* ---------- page ---------- */
+/* ---------- slide labels ---------- */
+
+const SLIDE_LABELS = {
+  hero: 'Pembuka',
+  quote: 'Kutipan',
+  couple: 'Mempelai',
+  event: 'Acara',
+  countdown: 'Countdown',
+  gifts: 'Tanda Kasih',
+  footer: 'Penutup',
+}
+
+/* ============================================================
+   APP
+   ============================================================ */
 
 export default function App() {
-  const [lightboxIndex, setLightboxIndex] = useState(null)
-  const triggerRef = useRef(null)
+  const hasCountdown = useMemo(() => !!getRemaining(WEDDING_DATE), [])
 
-  useScrollReveal()
+  const slideIds = useMemo(() => {
+    const ids = ['hero', 'quote', 'couple', 'event']
+    if (hasCountdown) ids.push('countdown')
+    ids.push('gifts', 'footer')
+    return ids
+  }, [hasCountdown])
 
-  const closeLightbox = useCallback(() => {
-    setLightboxIndex(null)
-    triggerRef.current?.focus()
-  }, [])
+  const totalSlides = slideIds.length
 
-  const stepLightbox = useCallback((delta) => {
-    setLightboxIndex((current) =>
-      current === null ? current : (current + delta + GALLERY.length) % GALLERY.length
-    )
-  }, [])
+  const [activeSlide, setActiveSlide] = useState(0)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [touchStartY, setTouchStartY] = useState(null)
+
+  /* navigation */
+  const goToSlide = useCallback((index) => {
+    if (index < 0 || index >= totalSlides) return
+    if (isTransitioning) return
+    setIsTransitioning(true)
+    setActiveSlide(index)
+    setTimeout(() => setIsTransitioning(false), 1050)
+  }, [totalSlides, isTransitioning])
+
+  useEffect(() => {
+    let cooldown = false
+    const handler = (e) => {
+      if (cooldown) { e.preventDefault(); return }
+      if (Math.abs(e.deltaY) < 20) return
+      cooldown = true
+      setTimeout(() => { cooldown = false }, 1100)
+      e.preventDefault()
+      if (e.deltaY > 0) goToSlide(activeSlide + 1)
+      else goToSlide(activeSlide - 1)
+    }
+    window.addEventListener('wheel', handler, { passive: false })
+    return () => window.removeEventListener('wheel', handler)
+  }, [activeSlide, goToSlide])
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return
+      if (e.key === 'ArrowDown' || e.key === 'PageDown') { e.preventDefault(); goToSlide(activeSlide + 1) }
+      else if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); goToSlide(activeSlide - 1) }
+      else if (e.key === 'Home') { e.preventDefault(); goToSlide(0) }
+      else if (e.key === 'End') { e.preventDefault(); goToSlide(totalSlides - 1) }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [activeSlide, goToSlide, totalSlides])
+
+  const handleTouchStart = useCallback((e) => { setTouchStartY(e.touches[0].clientY) }, [])
+  const handleTouchEnd = useCallback((e) => {
+      if (touchStartY === null) return
+    const diff = touchStartY - e.changedTouches[0].clientY
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) goToSlide(activeSlide + 1)
+      else goToSlide(activeSlide - 1)
+    }
+    setTouchStartY(null)
+  }, [touchStartY, activeSlide, goToSlide])
+
+  const slideTransform = useCallback((i) => `translateY(${(i - activeSlide) * 100}%)`, [activeSlide])
+
+  const slideClass = (idx) => {
+    let cls = 'slide'
+    if (idx === activeSlide) cls += ' is-active'
+    else if (idx > activeSlide) cls += ' is-below'
+    else cls += ' is-above'
+    return cls
+  }
 
   return (
     <>
-      <a className="skip" href="#isi">
-        Lompat ke isi undangan
-      </a>
-
+      <a className="skip" href="#isi">Lompat ke isi undangan</a>
       <MusicToggle />
+      <Particles />
 
-      {/* ---------- hero ---------- */}
-      <header className="hero">
-        <div className="hero-inner">
-          <span className="eyebrow">Undangan Pernikahan</span>
+      <div className="wave-left" aria-hidden="true">
+        <span className="vl vl--1" />
+        <span className="vl vl--2" />
+        <span className="vl vl--3" />
+      </div>
 
-          <div className="hero-crest">
-            <Wreath />
-            <h1 className="hero-names">
-              Azzohabi
-              <span className="hero-amp">&amp;</span>
-              Putri
-            </h1>
-          </div>
+      <nav className="slides-nav" aria-label="Navigasi slide">
+        {slideIds.map((id, i) => (
+          <button key={id} type="button" className={`slides-dot${i === activeSlide ? ' is-active' : ''}`}
+            onClick={() => goToSlide(i)}
+            aria-label={`${SLIDE_LABELS[id]} (slide ${i + 1} dari ${totalSlides})`}
+            aria-current={i === activeSlide ? 'step' : undefined}
+          />
+        ))}
+      </nav>
 
-          <p className="hero-meta">Sabtu, 17 Oktober 2026</p>
-          <p className="hero-place">Depok, Jawa Barat</p>
+      <div className="slides-container" id="isi" role="main" tabIndex={-1}
+        onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
 
-          <a className="btn" href="#isi">
-            Buka Undangan
-          </a>
+        {/* ---- hero (0) ---- */}
+        <div className={slideClass(0)} style={{ transform: slideTransform(0) }}>
+          <header className="hero">
+            <span className="hero-corner hero-corner--tl" aria-hidden="true" />
+            <span className="hero-corner hero-corner--tr" aria-hidden="true" />
+            <span className="hero-corner hero-corner--bl" aria-hidden="true" />
+            <div className="hero-inner">
+              <HeroStar />
+              <span className="eyebrow slide-child" style={{ '--d': 0 }}>You&rsquo;re invited to the wedding of</span>
+              <img className="hero-logo slide-child" src="/logo.png" alt="Azzohabi &amp; Putri" style={{ '--d': 1 }} />
+              <p className="hero-meta slide-child" style={{ '--d': 2 }}>Sabtu, 17 Oktober 2026</p>
+              <p className="hero-place slide-child" style={{ '--d': 3 }}>Depok, Jawa Barat</p>
+              <button className="btn slide-child" style={{ '--d': 4 }} onClick={() => goToSlide(1)} type="button">
+                <svg className="btn-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <rect x="2" y="4" width="20" height="16" rx="2" />
+                  <path d="M2 7l10 7 10-7" />
+                </svg>
+                Buka Undangan
+              </button>
+            </div>
+            <span className="hero-cue" aria-hidden="true" />
+          </header>
         </div>
-        <span className="hero-cue" aria-hidden="true" />
-      </header>
 
-      <main id="isi" tabIndex={-1}>
-        {/* ---------- quote ---------- */}
-        <section className="section reveal">
-          <div className="wrap narrow">
-            <blockquote className="quote">
-              &ldquo;Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan
-              untukmu pasangan hidup dari jenismu sendiri, supaya kamu cenderung dan
-              merasa tenteram kepadanya, dan dijadikan-Nya di antaramu rasa kasih dan
-              sayang.&rdquo;
-            </blockquote>
-            <p className="quote-source">QS. Ar-Rum: 21</p>
-          </div>
-        </section>
-
-        {/* ---------- couple ---------- */}
-        <section className="section section--panel reveal" aria-labelledby="mempelai">
-          <div className="wrap">
-            <span className="eyebrow">Mempelai</span>
-            <h2 className="h2" id="mempelai">
-              Kedua Calon Pengantin
-            </h2>
-            <hr className="rule" aria-hidden="true" />
-
-            {/* "Putra dari" / "Putri dari" already identify each side, so the
-                Mempelai Pria / Wanita tags would only repeat the section label. */}
-            <div className="couple">
-              <div>
-                <p className="person-name">Muhammad Azzohabi</p>
-                <p className="person-of">Putra dari</p>
-                <p className="person-parents">
-                  Bpk. Abdi Rohman (alm)
-                  <br />&amp; Ibu Soleha
-                </p>
+        {/* ---- quote (1) ---- */}
+        <div className={`${slideClass(1)} slide--ornament`} style={{ transform: slideTransform(1) }}>
+          <span className="corner-bl" aria-hidden="true" />
+          <section className="section section--glow">
+            <div className="wrap narrow">
+              <div className="quote-frame slide-child" style={{ '--d': 0 }}>
+                <span className="quote-mark" aria-hidden="true">&ldquo;</span>
+                <blockquote className="quote">
+                  Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan
+                  untukmu pasangan hidup dari jenismu sendiri, supaya kamu cenderung dan
+                  merasa tenteram kepadanya, dan dijadikan-Nya di antaramu rasa kasih dan&nbsp;sayang.
+                </blockquote>
+                <p className="quote-source">QS. Ar-Rum: 21</p>
               </div>
-
-              <span className="couple-amp" aria-hidden="true">
-                &amp;
-              </span>
-
-              <div>
-                <p className="person-name">Putri Ewing Vai</p>
-                <p className="person-of">Putri dari</p>
-                <p className="person-parents">
-                  Bpk. Moh Hamim
-                  <br />&amp; Ibu Wina (almh)
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ---------- event ---------- */}
-        <section className="section section--paper reveal" aria-labelledby="acara">
-          <div className="wrap">
-            <span className="eyebrow">Rangkaian Acara</span>
-            <h2 className="h2" id="acara">
-              Resepsi Pernikahan
-            </h2>
-            <hr className="rule" aria-hidden="true" />
-
-            <div className="event">
-              <p className="event-day">Sabtu</p>
-              <p className="event-date">17</p>
-              <p className="event-month">Oktober 2026</p>
-
-              <hr className="rule rule--tight" aria-hidden="true" />
-
-              <p className="event-time">11:00 &ndash; 13:00 WIB</p>
-
-              <hr className="rule rule--tight" aria-hidden="true" />
-
-              <p className="event-venue">Cornelis Koffie</p>
-              <p className="event-addr">
-                Jl. Pemuda No.16, Depok, Kec. Pancoran Mas,
-                <br />
-                Kota Depok, Jawa Barat 16431
-              </p>
-
-              <a
-                className="btn btn--ghost"
-                href={MAPS_URL}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Lihat Lokasi
-              </a>
-            </div>
-          </div>
-        </section>
-
-        {/* ---------- countdown ---------- */}
-        {getRemaining(WEDDING_DATE) && (
-          <section className="section reveal" aria-labelledby="hitung-mundur">
-            <div className="wrap">
-              <span className="eyebrow">Hitung Mundur</span>
-              <h2 className="h2" id="hitung-mundur">
-                Menuju Hari Bahagia
-              </h2>
-              <hr className="rule" aria-hidden="true" />
-
-              <Countdown />
-
-              <p className="cd-note">
-                Setiap detik membawa kami lebih dekat pada janji suci kami.
-              </p>
             </div>
           </section>
+        </div>
+
+        {/* ---- couple (2) ---- */}
+         <div className={`${slideClass(2)} slide--ornament`} style={{ transform: slideTransform(2) }}>
+          <span className="corner-bl" aria-hidden="true" />
+          <section className="section section--paper" aria-labelledby="mempelai">
+            <div className="wrap">
+              <span className="eyebrow slide-child" style={{ '--d': 0 }}>With Love</span>
+              <h2 className="h2 h2--bg slide-child" id="mempelai" style={{ '--d': 1 }}>The Groom &amp; Bride</h2>
+              <Ornament d={2} />
+              <div className="couple slide-child" style={{ '--d': 3 }}>
+                <div>
+                  <p className="person-name">Muhammad Azzohabi</p>
+                  <hr className="rule-draw rule--tight" aria-hidden="true" />
+                  <p className="person-of">Putra Pertama dari</p>
+                  <p className="person-parents">Bapak Abdi Rohman (alm)<br />&amp;<br />Ibu Soleha</p>
+                </div>
+                <span className="couple-amp" aria-hidden="true">&amp;</span>
+                <div>
+                  <p className="person-name">Putri Ewing Vai</p>
+                  <hr className="rule-draw rule--tight" aria-hidden="true" />
+                  <p className="person-of">Putri Ketiga dari</p>
+                  <p className="person-parents">Bapak Moh Hamim<br />&amp;<br />Ibu Wina (almh)</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        {/* ---- event (3) ---- */}
+        <div className={`${slideClass(3)} slide--ornament`} style={{ transform: slideTransform(3) }}>
+          <span className="corner-bl" aria-hidden="true" />
+          <section className="section section--paper" aria-labelledby="acara">
+            <div className="wrap">
+              <span className="eyebrow slide-child" style={{ '--d': 0 }}>Save The Date</span>
+              <h2 className="h2 slide-child" id="acara" style={{ '--d': 1 }}>Resepsi Pernikahan</h2>
+              <Ornament d={2} />
+              <div className="event slide-child" style={{ '--d': 3 }}>
+                <p className="event-day">Sabtu</p>
+                <p className="event-date">17</p>
+                <p className="event-month">Oktober 2026</p>
+                <hr className="rule-draw rule--tight" aria-hidden="true" />
+                <p className="event-time">11:00 &ndash; 13:00 WIB</p>
+                <hr className="rule-draw rule--tight" aria-hidden="true" />
+                <p className="event-venue">Cornelis Koffie</p>
+                <p className="event-addr">
+                  Jl. Pemuda No.16, Depok, Kec. Pancoran Mas,<br />Kota Depok, Jawa Barat 16431
+                </p>
+                <a className="btn btn--ghost" href={MAPS_URL} target="_blank" rel="noreferrer">
+                  <svg className="btn-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8">
+                    <path d="M12 2C8.1 2 5 5.1 5 9c0 5.3 7 13 7 13s7-7.7 7-13c0-3.9-3.1-7-7-7z" />
+                    <circle cx="12" cy="9" r="2.5" />
+                  </svg>
+                  View Location
+                </a>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        {/* ---- countdown (4) ---- */}
+        {hasCountdown && (
+          <div className={`${slideClass(4)} slide--ornament`} style={{ transform: slideTransform(4) }}>
+            <span className="corner-bl" aria-hidden="true" />
+            <section className="section" aria-labelledby="hitung-mundur">
+              <div className="wrap">
+                <span className="eyebrow slide-child" style={{ '--d': 0 }}>Countdown</span>
+                <h2 className="h2 slide-child" id="hitung-mundur" style={{ '--d': 1 }}>Menuju Hari Bahagia</h2>
+                <Ornament d={2} />
+                <div className="slide-child" style={{ '--d': 3 }}>
+                  <MiniCalendar />
+                </div>
+                <div className="slide-child" style={{ '--d': 4 }}>
+                  <div className="cd-frame">
+                    <Countdown />
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
         )}
 
-        {/* ---------- gallery ---------- */}
-        <section className="section section--paper reveal" aria-labelledby="galeri">
-          <div className="wrap">
-            <span className="eyebrow">Galeri</span>
-            <h2 className="h2" id="galeri">
-              Momen Berharga
-            </h2>
-            <hr className="rule" aria-hidden="true" />
-
-            <div className="gallery">
-              {GALLERY.map((photo, i) => (
-                <button
-                  type="button"
-                  className="gallery-item"
-                  key={photo.src}
-                  onClick={(event) => {
-                    triggerRef.current = event.currentTarget
-                    setLightboxIndex(i)
-                  }}
-                >
-                  <img src={photo.src} alt={photo.alt} loading="lazy" decoding="async" />
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ---------- gifts ---------- */}
-        <section className="section reveal" aria-labelledby="tanda-kasih">
-          <div className="wrap">
-            <span className="eyebrow">Tanda Kasih</span>
-            <h2 className="h2" id="tanda-kasih">
-              Hadiah Pernikahan
-            </h2>
-            <hr className="rule" aria-hidden="true" />
-
-            <p className="gifts-note">
-              Doa restu dan kehadiran Anda adalah hadiah yang paling berarti. Namun jika
-              ingin memberikan tanda kasih, berikut kami sampaikan:
-            </p>
-
-            <div className="accounts">
-              {ACCOUNTS.map((account) => (
-                <div className="account" key={account.number}>
-                  <div>
-                    <p className="account-bank">{account.bank}</p>
-                    <p className="account-num">{account.number}</p>
-                    <p className="account-name">a.n. {account.holder}</p>
+        {/* ---- gifts (5|4) ---- */}
+        <div className={`${slideClass(hasCountdown ? 5 : 4)} slide--ornament`} style={{ transform: slideTransform(hasCountdown ? 5 : 4) }}>
+          <span className="corner-bl" aria-hidden="true" />
+          <section className="section section--glow" aria-labelledby="tanda-kasih">
+            <div className="wrap">
+              <span className="eyebrow slide-child" style={{ '--d': 0 }}>Wedding Gift</span>
+              <h2 className="h2 slide-child" id="tanda-kasih" style={{ '--d': 1 }}>Hadiah Pernikahan</h2>
+              <Ornament d={2} />
+              <p className="gifts-note slide-child" style={{ '--d': 3 }}>
+                Tanpa mengurangi rasa hormat, bagi tamu undangan yang ingin memberikan
+                hadiah pernikahan kepada kedua mempelai, dapat dikirimkan melalui rekening
+                di bawah ini:
+              </p>
+              <div className="accounts slide-child" style={{ '--d': 4 }}>
+                {ACCOUNTS.map((account) => (
+                  <div className="account" key={account.number}>
+                    <div>
+                      <p className="account-bank">{account.bank}</p>
+                      <p className="account-num">{account.number}</p>
+                      <p className="account-name">a.n. {account.holder}</p>
+                    </div>
+                    <CopyButton value={account.number} label={account.bank} />
                   </div>
-                  <CopyButton value={account.number} label={account.bank} />
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
-      </main>
+          </section>
+        </div>
 
-      {/* ---------- footer ---------- */}
-      <footer className="footer">
-        <p className="footer-names">Azzohabi &amp; Putri</p>
-        <p className="footer-date">17 . 10 . 2026</p>
-        <hr className="rule" aria-hidden="true" />
-        <p className="footer-thanks">
-          Merupakan suatu kehormatan dan kebahagiaan apabila Bapak/Ibu/Saudara/i
-          berkenan hadir memberikan doa restu.
-        </p>
-        <p className="footer-salam">
-          Terima kasih &mdash; Wassalamu&rsquo;alaikum Wr. Wb.
-        </p>
-      </footer>
+        {/* ---- footer (6|5) ---- */}
+        <div className={`${slideClass(hasCountdown ? 6 : 5)} slide--ornament`} style={{ transform: slideTransform(hasCountdown ? 6 : 5) }}>
+          <span className="corner-bl" aria-hidden="true" />
+          <footer className="footer">
+            <p className="footer-names slide-child" style={{ '--d': 0 }}>Azzohabi &amp; Putri</p>
+            <p className="footer-date slide-child" style={{ '--d': 1 }}>17 . 10 . 2026</p>
+            <div className="slide-child" style={{ '--d': 2 }}>
+              <div className="ornament" aria-hidden="true">
+                <span className="ornament-line" />
+                <svg className="ornament-heart" viewBox="0 0 12 11" width="10" height="9">
+                  <path d="M6,10 C1.5,6.5 0,4 0,2.5 C0,1 1.2,0 2.5,0 C3.5,0 4.5,0.5 6,2 C7.5,0.5 8.5,0 9.5,0 C10.8,0 12,1 12,2.5 C12,4 10.5,6.5 6,10Z"
+                    fill="currentColor" />
+                </svg>
+                <span className="ornament-line" />
+              </div>
+            </div>
+            <p className="footer-thanks slide-child" style={{ '--d': 3 }}>
+              Menjadi sebuah kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i
+              berkenan hadir dalam hari bahagia kami. Terima kasih atas segala ucapan,
+              doa, dan perhatian yang diberikan.
+            </p>
+            <p className="footer-sub slide-child" style={{ '--d': 4 }}>See you on our big day!</p>
+            <p className="footer-salam slide-child" style={{ '--d': 5 }}>
+              Thank You
+            </p>
+          </footer>
+        </div>
 
-      {lightboxIndex !== null && (
-        <Lightbox index={lightboxIndex} onClose={closeLightbox} onStep={stepLightbox} />
-      )}
+      </div>
     </>
   )
 }
