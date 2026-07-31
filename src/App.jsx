@@ -224,6 +224,16 @@ function MusicToggle() {
     useWebAudioRef.current = true
     let disposed = false
 
+    const unlock = () => {
+      if (!pendingPlayRef.current || context.state === 'running') return
+      context.resume().then(() => {
+        if (!disposed) setPlaying(context.state === 'running')
+      }).catch(() => {})
+    }
+
+    window.addEventListener('pointerdown', unlock, { capture: true, once: true })
+    window.addEventListener('keydown', unlock, { capture: true, once: true })
+
     const load = async () => {
       try {
         const response = await fetch('/music.mp3')
@@ -255,6 +265,8 @@ function MusicToggle() {
 
     return () => {
       disposed = true
+      window.removeEventListener('pointerdown', unlock, { capture: true })
+      window.removeEventListener('keydown', unlock, { capture: true })
       try { sourceRef.current?.stop() } catch { /* source may already be stopped */ }
       context.close().catch(() => {})
     }
