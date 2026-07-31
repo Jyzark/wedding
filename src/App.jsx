@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Particles from './Particles.jsx'
+import WhiteLilyDecor from './WhiteLilyDecor.jsx'
 import './App.css'
 
 const WEDDING_DATE = new Date('2026-10-17T11:00:00+07:00')
@@ -88,18 +89,55 @@ function Ornament({ d = 0 }) {
   )
 }
 
-function HeroStar() {
+const SIDE_WAVE_SHAPES = {
+  quote: [
+    [68, 8, 65, 4, 58],
+    [76, 18, 70, 14, 66],
+    [84, 31, 78, 27, 74],
+  ],
+  couple: [
+    [55, -4, 72, 10, 62],
+    [70, 12, 80, 22, 74],
+    [82, 26, 67, 8, 80],
+  ],
+  event: [
+    [74, 2, 52, -8, 68],
+    [82, 19, 61, 5, 75],
+    [69, 8, 84, 24, 62],
+  ],
+  countdown: [
+    [50, -5, 76, 18, 48],
+    [64, 5, 84, 28, 61],
+    [78, 20, 58, 0, 82],
+  ],
+  gifts: [
+    [80, 15, 63, -4, 72],
+    [67, 0, 78, 16, 54],
+    [90, 30, 70, 10, 86],
+  ],
+  footer: [
+    [58, -6, 68, 4, 60],
+    [72, 9, 56, -2, 76],
+    [84, 24, 74, 14, 64],
+  ],
+}
+
+function buildWavePath(startX, [a, b, c, d, e]) {
+  return `M ${startX} -10 C ${startX} 40, ${a} 75, ${a} 145 S ${b} 245, ${b} 300 S ${c} 390, ${c} 460 S ${d} 560, ${d} 630 S ${e} 735, ${e} 780 C ${e} 840, ${startX} 855, ${startX} 910`
+}
+
+function SideWave({ variant }) {
+  const lanes = [12, 36, 60]
+
   return (
-    <span className="hero-star" aria-hidden="true">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-        <line x1="11" y1="1" x2="11" y2="7" stroke="var(--gold)" strokeWidth="0.6" opacity="0.5" />
-        <line x1="11" y1="15" x2="11" y2="21" stroke="var(--gold)" strokeWidth="0.6" opacity="0.5" />
-        <line x1="1" y1="11" x2="7" y2="11" stroke="var(--gold)" strokeWidth="0.6" opacity="0.5" />
-        <line x1="15" y1="11" x2="21" y2="11" stroke="var(--gold)" strokeWidth="0.6" opacity="0.5" />
-        <circle cx="11" cy="11" r="1.8" fill="var(--gold)" opacity="0.55" />
-        <circle cx="11" cy="11" r="5" stroke="var(--gold)" strokeWidth="0.4" opacity="0.25" />
+    <div className="wave-left" aria-hidden="true">
+      <svg viewBox="0 0 80 900" preserveAspectRatio="none">
+        {SIDE_WAVE_SHAPES[variant].map((shape, index) => (
+          <path key={index} className={`wave-path wave-path--${index + 1}`}
+            d={buildWavePath(lanes[index], shape)} />
+        ))}
       </svg>
-    </span>
+    </div>
   )
 }
 
@@ -168,13 +206,76 @@ function CopyButton({ value, label }) {
 
 function MusicToggle() {
   const audioRef = useRef(null)
+  const contextRef = useRef(null)
+  const sourceRef = useRef(null)
+  const useWebAudioRef = useRef(false)
+  const pendingPlayRef = useRef(true)
   const [playing, setPlaying] = useState(false)
 
   useEffect(() => {
-    audioRef.current?.play().then(() => setPlaying(true)).catch(() => setPlaying(false))
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext
+    if (!AudioContextClass) {
+      audioRef.current?.play().then(() => setPlaying(true)).catch(() => setPlaying(false))
+      return undefined
+    }
+
+    const context = new AudioContextClass()
+    contextRef.current = context
+    useWebAudioRef.current = true
+    let disposed = false
+
+    const load = async () => {
+      try {
+        const response = await fetch('/music.mp3')
+        if (!response.ok) throw new Error(`Audio request failed: ${response.status}`)
+        const buffer = await context.decodeAudioData(await response.arrayBuffer())
+        if (disposed) return
+
+        const source = context.createBufferSource()
+        source.buffer = buffer
+        source.loop = true
+        source.loopStart = 0
+        source.loopEnd = buffer.duration
+        source.connect(context.destination)
+        source.start(0)
+        sourceRef.current = source
+
+        if (pendingPlayRef.current) await context.resume().catch(() => {})
+        if (!disposed) setPlaying(context.state === 'running')
+      } catch {
+        if (disposed) return
+        useWebAudioRef.current = false
+        contextRef.current = null
+        context.close().catch(() => {})
+        audioRef.current?.play().then(() => setPlaying(true)).catch(() => setPlaying(false))
+      }
+    }
+
+    load()
+
+    return () => {
+      disposed = true
+      try { sourceRef.current?.stop() } catch { /* source may already be stopped */ }
+      context.close().catch(() => {})
+    }
   }, [])
 
-  const toggle = () => {
+  const toggle = async () => {
+    if (useWebAudioRef.current) {
+      const context = contextRef.current
+      if (!context) return
+      if (playing) {
+        pendingPlayRef.current = false
+        await context.suspend()
+        setPlaying(false)
+      } else {
+        pendingPlayRef.current = true
+        await context.resume()
+        setPlaying(context.state === 'running')
+      }
+      return
+    }
+
     const audio = audioRef.current
     if (!audio) return
     if (playing) { audio.pause(); setPlaying(false) }
@@ -183,7 +284,7 @@ function MusicToggle() {
 
   return (
     <>
-      <audio ref={audioRef} src="/music.mp3" loop preload="none" />
+      <audio ref={audioRef} src="/music.mp3" loop preload="auto" />
       <button type="button" className="music" onClick={toggle} aria-pressed={playing} aria-label={playing ? 'Hentikan musik' : 'Putar musik'}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
           {playing ? (
@@ -310,11 +411,9 @@ export default function App() {
       </button>
       <Particles />
 
-      <div className="wave-left" aria-hidden="true">
-        <span className="vl vl--1" />
-        <span className="vl vl--2" />
-        <span className="vl vl--3" />
-      </div>
+      {slideIds.slice(1).map((id) => (
+        <WhiteLilyDecor key={id} variant={id} active={slideIds[activeSlide] === id} />
+      ))}
 
       <nav className="slides-nav" aria-label="Navigasi slide">
         {slideIds.map((id, i) => (
@@ -336,7 +435,6 @@ export default function App() {
             <span className="hero-corner hero-corner--tr" aria-hidden="true" />
             <span className="hero-corner hero-corner--bl" aria-hidden="true" />
             <div className="hero-inner">
-              <HeroStar />
               <span className="eyebrow slide-child" style={{ '--d': 0 }}>You&rsquo;re invited to the wedding of</span>
               <img className="hero-logo slide-child" src="/logo.png" alt="Azzohabi &amp; Putri" style={{ '--d': 1 }} />
               <p className="hero-meta slide-child" style={{ '--d': 2 }}>Sabtu, 17 Oktober 2026</p>
@@ -357,6 +455,7 @@ export default function App() {
         <div className={`${slideClass(1)} slide--ornament`} style={{ transform: slideTransform(1) }}>
           <span className="corner-bl" aria-hidden="true" />
           <section className="section section--glow">
+            <SideWave variant="quote" />
             <div className="wrap narrow">
               <div className="quote-frame slide-child" style={{ '--d': 0 }}>
                 <span className="quote-mark" aria-hidden="true">&ldquo;</span>
@@ -374,7 +473,8 @@ export default function App() {
         {/* ---- couple (2) ---- */}
          <div className={`${slideClass(2)} slide--ornament`} style={{ transform: slideTransform(2) }}>
           <span className="corner-bl" aria-hidden="true" />
-          <section className="section section--paper" aria-labelledby="mempelai">
+          <section className="section section--paper section--couple" aria-labelledby="mempelai">
+            <SideWave variant="couple" />
             <div className="wrap">
               <span className="eyebrow slide-child" style={{ '--d': 0 }}>With Love</span>
               <h2 className="h2 h2--bg slide-child" id="mempelai" style={{ '--d': 1 }}>The Groom &amp; Bride</h2>
@@ -402,6 +502,7 @@ export default function App() {
         <div className={`${slideClass(3)} slide--ornament`} style={{ transform: slideTransform(3) }}>
           <span className="corner-bl" aria-hidden="true" />
           <section className="section section--paper" aria-labelledby="acara">
+            <SideWave variant="event" />
             <div className="wrap">
               <span className="eyebrow slide-child" style={{ '--d': 0 }}>Save The Date</span>
               <h2 className="h2 slide-child" id="acara" style={{ '--d': 1 }}>Resepsi Pernikahan</h2>
@@ -434,6 +535,7 @@ export default function App() {
           <div className={`${slideClass(4)} slide--ornament`} style={{ transform: slideTransform(4) }}>
             <span className="corner-bl" aria-hidden="true" />
             <section className="section" aria-labelledby="hitung-mundur">
+              <SideWave variant="countdown" />
               <div className="wrap">
                 <span className="eyebrow slide-child" style={{ '--d': 0 }}>Countdown</span>
                 <h2 className="h2 slide-child" id="hitung-mundur" style={{ '--d': 1 }}>Menuju Hari Bahagia</h2>
@@ -453,16 +555,17 @@ export default function App() {
 
         {/* ---- gifts (5|4) ---- */}
         <div className={`${slideClass(hasCountdown ? 5 : 4)} slide--ornament`} style={{ transform: slideTransform(hasCountdown ? 5 : 4) }}>
+          <SideWave variant="gifts" />
           <span className="corner-bl" aria-hidden="true" />
           <section className="section section--glow" aria-labelledby="tanda-kasih">
             <div className="wrap">
               <span className="eyebrow slide-child" style={{ '--d': 0 }}>Wedding Gift</span>
-              <h2 className="h2 slide-child" id="tanda-kasih" style={{ '--d': 1 }}>Hadiah Pernikahan</h2>
+              <h2 className="h2 slide-child" id="tanda-kasih" style={{ '--d': 1 }}>Tanda Kasih</h2>
               <Ornament d={2} />
               <p className="gifts-note slide-child" style={{ '--d': 3 }}>
                 Tanpa mengurangi rasa hormat, bagi tamu undangan yang ingin memberikan
                 hadiah pernikahan kepada kedua mempelai, dapat dikirimkan melalui rekening
-                di bawah ini:
+                di bawah ini :
               </p>
               <div className="accounts slide-child" style={{ '--d': 4 }}>
                 {ACCOUNTS.map((account) => (
@@ -489,7 +592,8 @@ export default function App() {
         </div>
 
         {/* ---- footer (6|5) ---- */}
-        <div className={`${slideClass(hasCountdown ? 6 : 5)} slide--ornament`} style={{ transform: slideTransform(hasCountdown ? 6 : 5) }}>
+        <div className={`${slideClass(hasCountdown ? 6 : 5)} slide--ornament slide--footer`} style={{ transform: slideTransform(hasCountdown ? 6 : 5) }}>
+          <SideWave variant="footer" />
           <span className="corner-bl" aria-hidden="true" />
           <footer className="footer">
             <p className="footer-names slide-child" style={{ '--d': 0 }}>Azzohabi &amp; Putri</p>
@@ -512,6 +616,9 @@ export default function App() {
             <p className="footer-sub slide-child" style={{ '--d': 4 }}>See you on our big day!</p>
             <p className="footer-salam slide-child" style={{ '--d': 5 }}>
               Thank You
+            </p>
+            <p className="footer-credit slide-child" style={{ '--d': 6 }}>
+              Made with love by <span>LokaWorks</span>
             </p>
           </footer>
         </div>

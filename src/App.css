@@ -138,6 +138,7 @@ a {
    ============================================================ */
 
 .section {
+  position: relative;
   padding: var(--section-y) var(--gutter);
   text-align: center;
   min-height: 100%;
@@ -492,7 +493,7 @@ a {
   position: fixed;
   right: 1.5rem;
   top: 50%;
-  z-index: 100;
+  z-index: 150;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -603,61 +604,300 @@ a {
 }
 
 /* ============================================================
-   SIDE LINES — three animated vertical lines
+   WHITE LILY DECOR — a different arrangement on every slide
+   ============================================================ */
+
+.white-lilies {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.section > .wrap,
+.hero > .hero-inner,
+.footer > * {
+  position: relative;
+  z-index: 1;
+}
+
+.white-lily-placement {
+  position: absolute;
+  width: clamp(14rem, 23vw, 21rem);
+  transform-origin: center;
+}
+
+.white-lily-spray {
+  display: block;
+  width: 100%;
+  overflow: visible;
+  opacity: 0;
+  filter: drop-shadow(0 10px 14px rgba(94, 80, 64, 0.06));
+  transform: translate3d(0, 3rem, 0) scale(0.92);
+  transition:
+    opacity 0.75s var(--ease-out) var(--spray-delay),
+    transform 1s var(--ease-out) var(--spray-delay);
+}
+
+.is-active .white-lily-spray {
+  opacity: 0.9;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.lily-stem {
+  fill: none;
+  stroke: var(--gold-deep);
+  stroke-width: 1.15;
+  stroke-linecap: round;
+  stroke-dasharray: 520;
+  stroke-dashoffset: 520;
+  transition: stroke-dashoffset 1.25s var(--ease-out) calc(var(--spray-delay) + 0.1s);
+}
+
+.lily-stem--branch {
+  stroke-width: 0.8;
+  opacity: 0.72;
+}
+
+.is-active .lily-stem {
+  stroke-dashoffset: 0;
+}
+
+.lily-leaves {
+  opacity: 0;
+  transform: scale(0.75);
+  transform-box: fill-box;
+  transform-origin: bottom center;
+  transition:
+    opacity 0.65s var(--ease-out) calc(var(--spray-delay) + 0.35s),
+    transform 0.75s var(--ease-spring) calc(var(--spray-delay) + 0.35s);
+}
+
+.is-active .lily-leaves {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.lily-leaves {
+  fill: var(--sage-soft);
+  stroke: rgba(94, 80, 64, 0.18);
+  stroke-width: 0.5;
+}
+
+.lily-bloom {
+  opacity: 0;
+  transform: rotate(-12deg) scale(0.2);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition:
+    opacity 0.55s var(--ease-out) var(--bloom-delay),
+    transform 0.9s var(--ease-spring) var(--bloom-delay);
+}
+
+.is-active .lily-bloom {
+  opacity: 1;
+  transform: rotate(0) scale(1);
+}
+
+.lily-petal {
+  stroke: #d7c9b7;
+  stroke-width: 0.6;
+  stroke-linejoin: round;
+}
+
+.lily-petal--back {
+  opacity: 0.92;
+}
+
+.lily-vein {
+  fill: none;
+  stroke: #c9b6aa;
+  stroke-width: 0.65;
+  stroke-linecap: round;
+  opacity: 0.42;
+}
+
+.lily-curl {
+  fill: none;
+  stroke: #bda99d;
+  stroke-width: 0.9;
+  stroke-linecap: round;
+  opacity: 0.42;
+}
+
+.lily-freckles {
+  fill: #b98b78;
+  opacity: 0.48;
+}
+
+.lily-stamens {
+  fill: var(--gold-deep);
+  stroke: var(--gold-deep);
+  stroke-width: 0.7;
+  stroke-linecap: round;
+}
+
+.lily-throat {
+  stroke: var(--champagne);
+  stroke-width: 0.4;
+}
+
+.white-lilies--quote .white-lily-placement:nth-child(1) {
+  left: -5.5rem;
+  top: 8%;
+  transform: rotate(-15deg);
+}
+
+.white-lilies--quote .white-lily-placement:nth-child(2) {
+  right: -6rem;
+  bottom: -7rem;
+  width: clamp(17rem, 25vw, 23rem);
+  transform: rotate(170deg);
+}
+
+.white-lilies--couple .white-lily-placement:nth-child(1) {
+  left: -5.5rem;
+  bottom: -6rem;
+  transform: rotate(-9deg);
+}
+
+.white-lilies--couple .white-lily-placement:nth-child(2) {
+  right: -5.5rem;
+  bottom: -6rem;
+  transform: scaleX(-1) rotate(-9deg);
+}
+
+.white-lilies--event .white-lily-placement:nth-child(1) {
+  top: -8rem;
+  right: -5rem;
+  width: clamp(18rem, 27vw, 24rem);
+  transform: rotate(153deg);
+}
+
+.white-lilies--event .white-lily-placement:nth-child(2) {
+  left: -5rem;
+  bottom: -8rem;
+  transform: rotate(-13deg);
+}
+
+.white-lilies--countdown .white-lily-placement:nth-child(1) {
+  top: -7rem;
+  left: -5rem;
+  transform: rotate(-8deg);
+}
+
+.white-lilies--countdown .white-lily-placement:nth-child(2) {
+  top: -7rem;
+  right: -5rem;
+  transform: rotate(169deg);
+}
+
+.white-lilies--countdown .white-lily-placement:nth-child(3) {
+  left: 50%;
+  bottom: -11rem;
+  width: clamp(11rem, 16vw, 15rem);
+  transform: translateX(-50%) rotate(-52deg);
+}
+
+.white-lilies--gifts .white-lily-placement:nth-child(1) {
+  left: -6rem;
+  bottom: -5.5rem;
+  width: clamp(18rem, 27vw, 24rem);
+  transform: rotate(-10deg);
+}
+
+.white-lilies--gifts .white-lily-placement:nth-child(2) {
+  top: -7rem;
+  right: -5rem;
+  transform: rotate(166deg);
+}
+
+.white-lilies--footer .white-lily-placement:nth-child(1) {
+  left: -4rem;
+  bottom: -8rem;
+  transform: rotate(-10deg);
+}
+
+.white-lilies--footer .white-lily-placement:nth-child(2) {
+  right: -4.5rem;
+  bottom: -8.5rem;
+  width: clamp(17rem, 24vw, 22rem);
+  transform: scaleX(-1) rotate(-10deg);
+}
+
+.white-lilies--footer .white-lily-placement:nth-child(3) {
+  top: 7%;
+  right: -5rem;
+  width: clamp(11rem, 15vw, 14rem);
+  transform: rotate(168deg);
+}
+
+/* ============================================================
+   SIDE WAVE — three flowing, offset currents
    ============================================================ */
 
 .wave-left {
-  position: fixed;
+  position: absolute;
   top: 0;
   bottom: 0;
-  left: 2rem;
-  z-index: 2;
+  left: -0.65rem;
+  z-index: 0;
+  width: clamp(3.75rem, 6vw, 5.5rem);
   pointer-events: none;
-  display: flex;
-  gap: 0.5rem;
-  align-items: stretch;
 }
 
-.vl {
-  width: 1px;
-  background: var(--gold);
+.wave-left svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
 
-.vl--1 {
+.wave-path {
+  fill: none;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.wave-path--1 {
+  stroke: var(--gold);
+  stroke-width: 1.15;
+  opacity: 0.38;
+  animation: waveCurrentA 7s ease-in-out infinite;
+}
+
+.wave-path--2 {
+  stroke: var(--champagne);
+  stroke-width: 0.85;
   opacity: 0.3;
-  height: 75%;
-  align-self: center;
-  animation: vlSway1 6s ease-in-out infinite;
+  animation: waveCurrentB 9s ease-in-out infinite;
 }
 
-.vl--2 {
-  opacity: 0.2;
-  height: 90%;
-  align-self: center;
-  animation: vlSway2 8s ease-in-out infinite;
+.wave-path--3 {
+  stroke: var(--gold-deep);
+  stroke-width: 0.8;
+  stroke-dasharray: 2 8;
+  opacity: 0.25;
+  animation: waveCurrentC 12s linear infinite;
 }
 
-.vl--3 {
-  opacity: 0.15;
-  height: 65%;
-  align-self: center;
-  animation: vlSway3 7s ease-in-out infinite;
+@keyframes waveCurrentA {
+  0%, 100% { transform: translateX(-4px); }
+  50% { transform: translateX(5px); }
 }
 
-@keyframes vlSway1 {
-  0%, 100% { transform: scaleY(1); }
-  50%      { transform: scaleY(0.92); }
+@keyframes waveCurrentB {
+  0%, 100% { transform: translateX(5px); }
+  50% { transform: translateX(-4px); }
 }
 
-@keyframes vlSway2 {
-  0%, 100% { transform: scaleY(0.94); }
-  50%      { transform: scaleY(1); }
-}
-
-@keyframes vlSway3 {
-  0%, 100% { transform: scaleY(1); }
-  33%      { transform: scaleY(0.96); }
-  66%      { transform: scaleY(0.9); }
+@keyframes waveCurrentC {
+  0% { stroke-dashoffset: 0; transform: translateX(-2px); }
+  50% { transform: translateX(4px); }
+  100% { stroke-dashoffset: -100; transform: translateX(-2px); }
 }
 
 /* ============================================================
@@ -694,24 +934,6 @@ a {
   position: relative;
   z-index: 1;
   max-width: 44rem;
-}
-
-/* hero ornament above eyebrow */
-.hero-star {
-  display: block;
-  margin-bottom: 1.25rem;
-  line-height: 1;
-  opacity: 0;
-}
-
-.is-active .hero-star {
-  animation: heroStarIn 0.7s var(--ease-out) forwards;
-  animation-delay: 0.15s;
-}
-
-@keyframes heroStarIn {
-  from { opacity: 0; transform: scale(0.5); }
-  to   { opacity: 1; transform: scale(1); }
 }
 
 .hero-logo {
@@ -1116,7 +1338,7 @@ a {
 .gifts-note {
   max-width: 32rem;
   margin: 0 auto;
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   line-height: 1.8;
   color: var(--ink-soft);
 }
@@ -1263,16 +1485,17 @@ a {
    ============================================================ */
 
 .footer {
-  min-height: 100%;
+  position: relative;
+  height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--section-y) var(--gutter) 4rem;
+  padding: clamp(2rem, 6vh, 4rem) var(--gutter) clamp(3.75rem, 7vh, 4.5rem);
+  overflow: hidden;
   text-align: center;
-  background:
-    radial-gradient(ellipse 60% 55% at 50% 50%, rgba(196, 168, 124, 0.06), transparent 70%),
-    linear-gradient(180deg, var(--ivory) 0%, var(--surface) 100%);
+  background: transparent;
   color: var(--ink-soft);
 }
 
@@ -1299,12 +1522,12 @@ a {
   max-width: 34rem;
   margin: 0 auto;
   font-size: 0.9rem;
-  line-height: 1.85;
+  line-height: 1.65;
   color: var(--ink-soft);
 }
 
 .footer-sub {
-  margin-top: 2rem;
+  margin-top: clamp(0.9rem, 2.5vh, 2rem);
   font-family: var(--sans);
   font-size: 0.8rem;
   font-weight: 400;
@@ -1320,6 +1543,35 @@ a {
   font-weight: 300;
   font-style: italic;
   color: var(--ink-soft);
+}
+
+.footer-credit {
+  position: absolute !important;
+  left: 50%;
+  bottom: 0.85rem;
+  font-size: 0.58rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--ink-muted);
+  transform: translateX(-50%) !important;
+}
+
+.footer-credit span {
+  font-weight: 600;
+  color: var(--gold-deep);
+}
+
+.footer .ornament {
+  margin: clamp(1rem, 2.5vh, 2rem) auto;
+}
+
+.slide--footer {
+  overflow-y: hidden;
+  background:
+    radial-gradient(ellipse 60% 55% at 50% 50%, rgba(196, 168, 124, 0.06), transparent 70%),
+    linear-gradient(180deg, var(--ivory) 0%, var(--surface) 100%);
 }
 
 /* ============================================================
@@ -1424,6 +1676,52 @@ a {
   }
 }
 
+@media (min-width: 32.0625rem) {
+  .white-lilies--footer .white-lily-placement:nth-child(1) {
+    left: -4rem;
+    bottom: -9rem;
+    width: clamp(16rem, 21vw, 19rem);
+  }
+
+  .white-lilies--footer .white-lily-placement:nth-child(2) {
+    right: -4.5rem;
+    bottom: -9.5rem;
+    width: clamp(17rem, 22vw, 20rem);
+  }
+
+  .footer {
+    padding: clamp(1.25rem, 3.5vh, 2.5rem) var(--gutter) clamp(2.25rem, 5vh, 3.5rem);
+  }
+
+  .footer-names {
+    font-size: clamp(2.1rem, 5vh, 3rem);
+  }
+
+  .footer-date {
+    margin-top: 0.35rem;
+    line-height: 1.3;
+  }
+
+  .footer .ornament {
+    margin: clamp(0.65rem, 1.5vh, 1.1rem) auto;
+  }
+
+  .footer-thanks {
+    font-size: clamp(0.78rem, 1.6vh, 0.9rem);
+    line-height: 1.5;
+  }
+
+  .footer-sub {
+    margin-top: clamp(0.6rem, 1.5vh, 1rem);
+    line-height: 1.4;
+  }
+
+  .footer-salam {
+    margin-top: 0.2rem;
+    line-height: 1.3;
+  }
+}
+
 @media (max-width: 32rem) {
   .slides-nav {
     display: none;
@@ -1437,6 +1735,60 @@ a {
     max-width: 100%;
     width: 90%;
     margin: 2rem auto 3rem;
+  }
+
+  .white-lily-placement {
+    width: 11.5rem;
+  }
+
+  .white-lilies--quote .white-lily-placement:nth-child(2),
+  .white-lilies--event .white-lily-placement:nth-child(1),
+  .white-lilies--gifts .white-lily-placement:nth-child(1),
+  .white-lilies--footer .white-lily-placement:nth-child(2) {
+    width: 14.5rem;
+  }
+
+  .white-lilies--countdown .white-lily-placement:nth-child(3) {
+    width: 11.5rem;
+  }
+
+  .white-lilies--gifts .white-lily-placement:nth-child(1) {
+    left: -8rem;
+    bottom: -9.5rem;
+    width: 13.5rem;
+    transform: rotate(-5deg);
+  }
+
+  .white-lilies--gifts .white-lily-placement:nth-child(2) {
+    top: -8.5rem;
+    right: -7rem;
+    width: 10.5rem;
+    transform: rotate(170deg);
+  }
+
+  .white-lilies--footer .white-lily-placement:nth-child(1) {
+    left: -4.25rem;
+    bottom: -7.5rem;
+    width: 11.5rem;
+    transform: rotate(-5deg);
+  }
+
+  .white-lilies--footer .white-lily-placement:nth-child(2) {
+    right: -4.75rem;
+    bottom: -8rem;
+    width: 13rem;
+    transform: scaleX(-1) rotate(-5deg);
+  }
+
+  .white-lilies--footer .white-lily-placement:nth-child(3) {
+    top: 7%;
+    right: -4.5rem;
+    width: 10.5rem;
+    transform: rotate(172deg);
+  }
+
+  .is-active .white-lily-spray {
+    opacity: 0.74;
   }
 
   .hero .btn {
@@ -1465,7 +1817,46 @@ a {
   }
 
   .couple {
-    gap: 2rem;
+    gap: 0.85rem;
+    margin-top: 0;
+  }
+
+  .section--couple {
+    padding-top: 2.25rem;
+    padding-bottom: 2.25rem;
+  }
+
+  .section--couple .h2--bg {
+    margin-top: 0.5rem;
+    font-size: clamp(2.3rem, 10vw, 2.8rem);
+  }
+
+  .section--couple .ornament {
+    margin: 0.9rem auto 1rem;
+  }
+
+  .section--couple .person-name {
+    font-size: 1.55rem;
+    line-height: 1.05;
+  }
+
+  .section--couple .rule--tight {
+    margin: 0.6rem auto;
+  }
+
+  .section--couple .person-of {
+    margin-top: 0.2rem;
+    font-size: 0.68rem;
+  }
+
+  .section--couple .person-parents {
+    margin-top: 0.1rem;
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+
+  .section--couple .couple-amp {
+    font-size: 1.75rem;
   }
 
   .event {
@@ -1523,10 +1914,91 @@ a {
 
   .accounts {
     grid-template-columns: 1fr;
+    gap: 0.7rem;
+    margin-top: 1.4rem;
+    max-width: 17.5rem;
   }
 
   .account {
-    aspect-ratio: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 0.3rem;
+    aspect-ratio: 1.586 / 1;
+    min-height: 0;
+    padding: 0.9rem 1rem;
+    border-radius: 10px;
+  }
+
+  .account > div {
+    min-width: 0;
+  }
+
+  .account-num {
+    font-size: 1.15rem;
+    letter-spacing: 0.03em;
+  }
+
+  .account-name {
+    font-size: 0.72rem;
+  }
+
+  .account::before,
+  .card-chip-pads {
+    top: 0.8rem;
+    right: 1rem;
+    width: 1.8rem;
+    height: 1.4rem;
+  }
+
+  .account::after {
+    display: none;
+  }
+
+  .account .copy {
+    align-self: flex-end;
+    min-height: 2.2rem;
+    margin-top: 0;
+    padding: 0 0.85rem;
+    font-size: 0.6rem;
+  }
+
+  .footer {
+    height: 100%;
+    min-height: 0;
+    padding: clamp(1.25rem, 4vh, 2rem) 1.25rem clamp(3.5rem, 7vh, 4rem);
+  }
+
+  .footer-names {
+    font-size: clamp(2rem, 10vw, 2.6rem);
+  }
+
+  .footer-date {
+    margin-top: 0.4rem;
+    font-size: 0.64rem;
+    letter-spacing: 0.3em;
+  }
+
+  .footer .ornament {
+    margin: 0.85rem auto;
+  }
+
+  .footer-thanks {
+    max-width: 19rem;
+    font-size: 0.8rem;
+    line-height: 1.55;
+  }
+
+  .footer-sub {
+    margin-top: 0.75rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.22em;
+  }
+
+  .footer-salam {
+    margin-top: 0.25rem;
+    font-size: 0.95rem;
   }
 
   .slide--ornament::before,
@@ -1536,7 +2008,37 @@ a {
   }
 
   .wave-left {
+    left: -1.15rem;
+    width: 3rem;
+    opacity: 0.68;
+  }
+
+  .wave-path--3 {
     display: none;
+  }
+}
+
+@media (max-width: 32rem) and (max-height: 42rem) {
+  .footer {
+    padding-top: 0.75rem;
+    padding-bottom: 3.25rem;
+  }
+
+  .footer-names {
+    font-size: 1.75rem;
+  }
+
+  .footer .ornament {
+    margin: 0.55rem auto;
+  }
+
+  .footer-thanks {
+    font-size: 0.72rem;
+    line-height: 1.4;
+  }
+
+  .footer-sub {
+    margin-top: 0.55rem;
   }
 }
 
@@ -1567,6 +2069,27 @@ a {
     display: none;
   }
 
+  .white-lily-spray,
+  .lily-leaves,
+  .lily-bloom {
+    transition: none;
+  }
+
+  .white-lily-spray {
+    opacity: 0.75;
+    transform: none;
+  }
+
+  .lily-stem {
+    stroke-dashoffset: 0;
+  }
+
+  .lily-leaves,
+  .lily-bloom {
+    opacity: 1;
+    transform: none;
+  }
+
   .slide--ornament::before,
   .slide--ornament::after {
     display: none;
@@ -1591,7 +2114,7 @@ a {
     animation: none;
   }
 
-  .vl {
+  .wave-path {
     animation: none !important;
   }
 }
