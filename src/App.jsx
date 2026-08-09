@@ -7,7 +7,7 @@ const WEDDING_DATE = new Date('2026-10-17T11:00:00+07:00')
 const MAPS_URL = 'https://share.google/N1498OtR3jMvBXDPH'
 
 const ACCOUNTS = [
-  { bank: 'OceanBank', number: '901974084345', holder: 'Putri Ewing Vai' },
+  { bank: 'SeaBank', number: '901974084345', holder: 'Putri Ewing Vai' },
   { bank: 'BCA', number: '7651120491', holder: 'Muhammad Azzohabi' },
 ]
 
